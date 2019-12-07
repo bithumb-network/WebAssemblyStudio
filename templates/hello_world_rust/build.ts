@@ -7,10 +7,11 @@ gulp.task("build", async () => {
   const libSrc = project.getFile("src/lib.rs");
   const data = await Service.compileFileWithBindings(libSrc, "rust", "wasm", options);
 
-  const outWasm = project.newFile("out/main_bg.wasm", "wasm", true);
+  const outWasm = project.newFile("out/contract.wasm", "wasm", true);
   outWasm.setData(data.wasm);
-  const outJs = project.newFile("out/main.js", "javascript", true);
-  outJs.setData(data.wasmBindgenJs);
+  /// remove out main.js
+  // const outJs = project.newFile("out/main.js", "javascript", true);
+  // outJs.setData(data.wasmBindgenJs);
 });
 
 gulp.task("default", ["build"], async () => {});
