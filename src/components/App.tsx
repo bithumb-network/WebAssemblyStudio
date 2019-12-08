@@ -28,7 +28,7 @@ import { EditorView, ViewTabs, View, Tab, Tabs } from "./editor";
 import { Header } from "./Header";
 import { Toolbar } from "./Toolbar";
 import { ViewType, defaultViewTypeForFileType } from "./editor/View";
-import { build, run, runTask, openFiles, pushStatus, popStatus } from "../actions/AppActions";
+import { build, run, runTask, newRunTask, openFiles, pushStatus, popStatus } from "../actions/AppActions";
 
 import appStore from "../stores/AppStore";
 import {
@@ -93,6 +93,7 @@ import Group from "../utils/group";
 import { StatusBar } from "./StatusBar";
 import { publishArc, notifyArcAboutFork } from "../actions/ArcActions";
 import { RunTaskExternals } from "../utils/taskRunner";
+import {project} from "*";
 
 export interface AppState {
   project: ModelRef<Project>;
@@ -397,6 +398,18 @@ export class App extends React.Component<AppProps, AppState> {
     await downloadService.downloadProject(projectModel, this.state.fiddle);
     this.logLn("Project Zip CREATED ");
   }
+  async newBuild() {
+    this.logLn("compile");
+    pushStatus("Building Project");
+    const options = { lto: true, opt_level: 's', debug: true };
+    const project = appStore.getProject().getModel();
+    const libSrc = project.getFile("src/lib.rs");
+    const data = await Service.compileFileWithBindings(libSrc, "rust", "wasm", options);
+
+    const outWasm = project.newFile("out/contract.wasm", "wasm", true);
+    outWasm.setData(data.wasm);
+    popStatus();
+  }
   /**
    * Remember workspace split.
    */
@@ -512,7 +525,7 @@ export class App extends React.Component<AppProps, AppState> {
         title="Build Project: CtrlCmd + B"
         isDisabled={this.toolbarButtonsAreDisabled()}
         onClick={() => {
-          build();
+          this.newBuild();
         }}
       />);
     if (this.props.embeddingParams.type !== EmbeddingType.Arc) {
