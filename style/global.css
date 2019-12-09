@@ -504,6 +504,12 @@ a {
   float: right;
 }
 
+.version {
+  float: right;
+  width: 300px;
+  color: black;
+}
+
 .issue {
   background-color: #a73535;
   float: right;

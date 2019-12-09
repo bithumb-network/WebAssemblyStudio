@@ -285,24 +285,19 @@ export async function runTask(
   externals: RunTaskExternals = RunTaskExternals.Default
 ) {
   // Runs the provided source in our fantasy gulp context
-  console.log("name:", name, "========");
   const run = async (src: string) => {
     const project = appStore.getProject().getModel();
     await runGulpTask(src, name, optional, project, logLn, externals);
   };
   let gulpfile = appStore.getFileByName("gulpfile.js");
-  console.log("gulpfile:", gulpfile, "========");
   if (gulpfile) {
-    console.log("11111:");
     await run(appStore.getFileSource(gulpfile));
   } else {
     if (gulpfile = appStore.getFileByName("build.ts")) {
-      console.log("222222");
       const output = await gulpfile.getModel().getEmitOutput();
       await run(output.outputFiles[0].text);
     } else {
       if (gulpfile = appStore.getFileByName("build.js")) {
-        console.log("3333333333");
         await run(appStore.getFileSource(gulpfile));
       } else {
         logLn(Errors.BuildFileMissing, "error");

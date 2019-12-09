@@ -78,7 +78,8 @@
     "request": "^2.88.0",
     "tar-js": "^0.3.0",
     "tslint-react": "^3.6.0",
-    "qrcode.react": "^1.0.0"
+    "qrcode.react": "^1.0.0",
+    "react-select": "^3.0.8"
   },
   "devDependencies": {
     "@types/base64-js": "^1.2.5",

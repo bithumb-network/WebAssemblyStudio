@@ -25,6 +25,7 @@ import {Workspace} from "./Workspace";
 import {View, ViewTabs} from "./editor";
 import {Toolbar} from "./Toolbar";
 import {defaultViewTypeForFileType} from "./editor/View";
+import Select from "react-select";
 import {
   addFileTo,
   build,
@@ -115,6 +116,11 @@ export interface AppState {
   deployDialog: boolean;
 
   /**
+   * If true, the deploy fiddle dialog is open.
+   */
+  compilerOption: string;
+
+  /**
    * If true, the new project dialog is open.
    */
   newProjectDialog: boolean;
@@ -175,6 +181,11 @@ export interface AppWindowContext {
   promptWhenClosing: boolean;
 }
 
+const compilerOptions = [
+  {value: "cargo 1.38.0-nightly (e853aa976 2019-08-09) && cdt v0.1.0 (002f3da6 2019-12-04)", label: "cargo 1.38.0-nightly (e853aa976 2019-08-09)&&cdt v0.1.0 (002f3da6 2019-12-04)"},
+  {value: "cargo xxx-nightly && cdt xxx", label: "cargo xxx-nightly && cdt xxx"}
+];
+
 export class App extends React.Component<AppProps, AppState> {
   fiddle: string;
   toastContainer: ToastContainer;
@@ -188,6 +199,7 @@ export class App extends React.Component<AppProps, AppState> {
       editFileDialogFile: null,
       newProjectDialog: !props.fiddle,
       shareDialog: false,
+      compilerOption: "",
       workspaceSplits: [
         {
           min: 200,
@@ -359,6 +371,11 @@ export class App extends React.Component<AppProps, AppState> {
     this.setState({ deployDialog: true });
   }
 
+  // @ts-ignore
+  handleSelected = e => {
+    this.setState({compilerOption: e.value});
+  }
+
   async update() {
     saveProject(this.state.fiddle);
   }
@@ -403,7 +420,7 @@ export class App extends React.Component<AppProps, AppState> {
   async newBuild() {
     this.logLn("compile");
     pushStatus("Building Project");
-    const options = { lto: true, opt_level: 's', debug: true };
+    const options = { lto: true, opt_level: 's', debug: true, compilerOptime: this.state.compilerOption };
     const project = appStore.getProject().getModel();
     const libSrc = project.getFile("src/lib.rs");
     const data = await Service.compileFileWithBindings(libSrc, Language.Rust, Language.Wasm, options);
@@ -594,6 +611,7 @@ export class App extends React.Component<AppProps, AppState> {
       );
     }
     if (this.props.embeddingParams.type === EmbeddingType.None) {
+      // @ts-ignore
       toolbarButtons.push(
         <Button
           key="GithubIssues"
@@ -614,6 +632,15 @@ export class App extends React.Component<AppProps, AppState> {
           onClick={() => {
             this.loadHelp();
           }}
+        />,
+        <Select
+            defaultValue={compilerOptions[0]}
+            key="CompilerVersion"
+            label="Compiler Version"
+            title="Compiler Version"
+            className="version"
+            onChange={this.handleSelected}
+            options={compilerOptions}
         />
       );
     }
