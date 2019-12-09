@@ -79,6 +79,7 @@ import {EditFileDialog} from "./EditFileDialog";
 import {UploadFileDialog} from "./UploadFileDialog";
 import {ToastContainer} from "./Toasts";
 import {ShareDialog} from "./ShareDialog";
+import {DeployDialog} from "./DeployDialog";
 import {NewProjectDialog, Template} from "./NewProjectDialog";
 import {NewDirectoryDialog} from "./NewDirectoryDialog";
 import {ControlCenter} from "./ControlCenter";
@@ -107,6 +108,11 @@ export interface AppState {
    * If true, the share fiddle dialog is open.
    */
   shareDialog: boolean;
+
+  /**
+   * If true, the deploy fiddle dialog is open.
+   */
+  deployDialog: boolean;
 
   /**
    * If true, the new project dialog is open.
@@ -349,6 +355,10 @@ export class App extends React.Component<AppProps, AppState> {
     this.setState({ shareDialog: true });
   }
 
+  deploy() {
+    this.setState({ deployDialog: true });
+  }
+
   async update() {
     saveProject(this.state.fiddle);
   }
@@ -530,7 +540,7 @@ export class App extends React.Component<AppProps, AppState> {
           title="Compile Deploy"
           isDisabled={this.toolbarButtonsAreDisabled() || !this.state.fiddle}
           onClick={() => {
-            alert("unimplement!");
+            this.deploy();
           }}
       />);
     // if (this.props.embeddingParams.type !== EmbeddingType.Arc) {
@@ -718,6 +728,15 @@ export class App extends React.Component<AppProps, AppState> {
             this.setState({ shareDialog: false });
           }}
         />
+      }
+      {this.state.deployDialog &&
+      <DeployDialog
+          isOpen={true}
+          fiddle={this.state.fiddle}
+          onCancel={() => {
+            this.setState({ deployDialog: false });
+          }}
+      />
       }
       {this.state.uploadFileDialogDirectory &&
         <UploadFileDialog

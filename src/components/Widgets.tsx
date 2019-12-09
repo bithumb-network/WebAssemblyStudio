@@ -21,6 +21,7 @@
 
 import * as React from "react";
 import { ChangeEventHandler } from "react";
+import QRCode from "qrcode.react";
 
 export class Spacer extends React.Component<{
   height: number
@@ -61,6 +62,31 @@ export class TextInputBox extends React.Component<{
       return <div style={{ display: "flex", flexDirection: "row" }}>
         <div className="text-input-box-label">{this.props.label}</div>
         <div style={{ flex: 1 }}>{input}</div>
+        {this.props.error && <div className="text-input-box-error">{this.props.error}</div>}
+      </div>;
+    } else {
+      return input;
+    }
+  }
+}
+
+export class ImgShowBox extends React.Component<{
+  label: string;
+  value: string;
+  error?: string;
+  onChange?: ChangeEventHandler<any>;
+}, {
+
+}> {
+  constructor(props: any) {
+    super(props);
+  }
+  render() {
+    const input = <input className="text-input-box" type="text" value={this.props.value} onChange={this.props.onChange} />;
+    if (this.props.label) {
+      return <div>
+        <div className="text-input-box-label">{this.props.label}</div>
+        <QRCode value={this.props.value} size={192} />
         {this.props.error && <div className="text-input-box-error">{this.props.error}</div>}
       </div>;
     } else {
