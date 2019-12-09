@@ -23,7 +23,7 @@ import * as React from "react";
 import * as ReactModal from "react-modal";
 import { Button } from "./shared/Button";
 import { GoX } from "./shared/Icons";
-import { TextInputBox } from "./Widgets";
+import {ImgShowBox, TextInputBox} from "./Widgets";
 
 export class ShareDialog extends React.Component<{
   isOpen: boolean;
@@ -52,6 +52,7 @@ export class ShareDialog extends React.Component<{
         </div>
         <div style={{ flex: 1, padding: "8px" }}>
           <TextInputBox label="URL" value={`${urlPrefix}?f=${this.props.fiddle}`}/>
+          <ImgShowBox label="QrCode" value={`${urlPrefix}?f=${this.props.fiddle}`}/>
         </div>
         <div>
           <Button
