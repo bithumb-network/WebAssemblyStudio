@@ -20,80 +20,72 @@
  */
 
 import * as React from "react";
-import * as ReactDOM from "react-dom";
-import * as ReactModal from "react-modal";
 
-import { Workspace } from "./Workspace";
-import { EditorView, ViewTabs, View, Tab, Tabs } from "./editor";
-import { Header } from "./Header";
-import { Toolbar } from "./Toolbar";
-import { ViewType, defaultViewTypeForFileType } from "./editor/View";
-import { build, run, runTask, newRunTask, openFiles, pushStatus, popStatus } from "../actions/AppActions";
-
-import appStore from "../stores/AppStore";
+import {Workspace} from "./Workspace";
+import {View, ViewTabs} from "./editor";
+import {Toolbar} from "./Toolbar";
+import {defaultViewTypeForFileType} from "./editor/View";
 import {
   addFileTo,
-  loadProject,
-  initStore,
-  updateFileNameAndDescription,
-  deleteFile,
-  splitGroup,
-  openProjectFiles,
-  openFile,
-  openView,
-  closeView,
+  build,
   closeTabs,
-  saveProject,
+  closeView,
+  deleteFile,
   focusTabGroup,
-  setViewType,
+  initStore,
+  loadProject,
   logLn,
+  openFile,
+  openFiles,
+  openProjectFiles,
+  openView,
+  popStatus,
+  pushStatus,
+  run,
+  runTask,
+  saveProject,
+  setViewType,
+  splitGroup,
+  updateFileNameAndDescription
 } from "../actions/AppActions";
-import { Project, File, FileType, Directory, ModelRef } from "../models";
-import { Service, Language } from "../service";
-import { Split, SplitOrientation, SplitInfo } from "./Split";
 
-import { layout, assert, resetDOMSelection } from "../util";
+import appStore from "../stores/AppStore";
+import {Directory, File, FileType, ModelRef, Project} from "../models";
+import {Language, Service} from "../service";
+import {Split, SplitInfo, SplitOrientation} from "./Split";
+
+import {assert, layout, resetDOMSelection} from "../util";
 
 import * as Mousetrap from "mousetrap";
-import { Sandbox } from "./Sandbox";
-import { Gulpy } from "../gulpy";
 import {
-  GoDelete,
-  GoPencil,
-  GoGear,
-  GoVerified,
-  GoFileCode,
-  GoQuote,
-  GoFileBinary,
-  GoFile,
-  GoDesktopDownload,
-  GoBook,
-  GoRepoForked,
-  GoRocket,
   GoBeaker,
   GoBeakerGear,
-  GoThreeBars,
+  GoDesktopDownload,
+  GoGear,
   GoGist,
   GoOpenIssue,
+  GoPencil,
   GoQuestion,
+  GoRepoForked,
+  GoRocket,
+  GoThreeBars,
+  GoFile,
+  GoCloudUpload,
 } from "./shared/Icons";
-import { Button } from "./shared/Button";
+import {Button} from "./shared/Button";
 
-import { NewFileDialog } from "./NewFileDialog";
-import { EditFileDialog } from "./EditFileDialog";
-import { UploadFileDialog } from "./UploadFileDialog";
-import { ToastContainer } from "./Toasts";
-import { Spacer, Divider } from "./Widgets";
-import { ShareDialog } from "./ShareDialog";
-import { NewProjectDialog, Template } from "./NewProjectDialog";
-import { NewDirectoryDialog } from "./NewDirectoryDialog";
-import { Errors } from "../errors";
-import { ControlCenter } from "./ControlCenter";
+import {NewFileDialog} from "./NewFileDialog";
+import {EditFileDialog} from "./EditFileDialog";
+import {UploadFileDialog} from "./UploadFileDialog";
+import {ToastContainer} from "./Toasts";
+import {ShareDialog} from "./ShareDialog";
+import {NewProjectDialog, Template} from "./NewProjectDialog";
+import {NewDirectoryDialog} from "./NewDirectoryDialog";
+import {ControlCenter} from "./ControlCenter";
 import Group from "../utils/group";
-import { StatusBar } from "./StatusBar";
-import { publishArc, notifyArcAboutFork } from "../actions/ArcActions";
-import { RunTaskExternals } from "../utils/taskRunner";
-import {project} from "*";
+import {StatusBar} from "./StatusBar";
+import {notifyArcAboutFork, publishArc} from "../actions/ArcActions";
+import {RunTaskExternals} from "../utils/taskRunner";
 
 export interface AppState {
   project: ModelRef<Project>;
@@ -404,9 +396,9 @@ export class App extends React.Component<AppProps, AppState> {
     const options = { lto: true, opt_level: 's', debug: true };
     const project = appStore.getProject().getModel();
     const libSrc = project.getFile("src/lib.rs");
-    const data = await Service.compileFileWithBindings(libSrc, "rust", "wasm", options);
+    const data = await Service.compileFileWithBindings(libSrc, Language.Rust, Language.Wasm, options);
 
-    const outWasm = project.newFile("out/contract.wasm", "wasm", true);
+    const outWasm = project.newFile("out/contract.wasm", FileType.Wasm, true);
     outWasm.setData(data.wasm);
     popStatus();
   }
@@ -471,31 +463,33 @@ export class App extends React.Component<AppProps, AppState> {
     }
     if (this.props.embeddingParams.type === EmbeddingType.None ||
         this.props.embeddingParams.type === EmbeddingType.Arc) {
+      // toolbarButtons.push(
+      //   <Button
+      //     key="ForkProject"
+      //     icon={<GoRepoForked />}
+      //     label="Fork"
+      //     title="Fork Project"
+      //     isDisabled={this.toolbarButtonsAreDisabled()}
+      //     onClick={() => {
+      //       this.fork();
+      //     }}
+      //   />
+      // );
       toolbarButtons.push(
-        <Button
-          key="ForkProject"
-          icon={<GoRepoForked />}
-          label="Fork"
-          title="Fork Project"
-          isDisabled={this.toolbarButtonsAreDisabled()}
-          onClick={() => {
-            this.fork();
-          }}
-        />
+          <Button
+              key="Upload"
+              icon={<GoCloudUpload />}
+              label="Upload"
+              title="Upload Project"
+              isDisabled={this.toolbarButtonsAreDisabled()}
+              onClick={() => {
+                this.fork();
+              }}
+          />
       );
     }
     if (this.props.embeddingParams.type === EmbeddingType.None) {
       toolbarButtons.push(
-        <Button
-          key="CreateGist"
-          icon={<GoGist />}
-          label="Create Gist"
-          title="Create GitHub Gist from Project"
-          isDisabled={this.toolbarButtonsAreDisabled()}
-          onClick={() => {
-            this.gist();
-          }}
-        />,
         <Button
           key="Download"
           icon={<GoDesktopDownload />}
@@ -521,37 +515,47 @@ export class App extends React.Component<AppProps, AppState> {
       <Button
         key="Build"
         icon={<GoBeaker />}
-        label="Build"
-        title="Build Project: CtrlCmd + B"
+        label="Compile"
+        title="Compile Project: CtrlCmd + B"
         isDisabled={this.toolbarButtonsAreDisabled()}
         onClick={() => {
           this.newBuild();
         }}
+      />,
+      <Button
+          key="Deploy"
+          icon={<GoFile />}
+          label="Deploy"
+          title="Compile Deploy"
+          isDisabled={this.toolbarButtonsAreDisabled() || !this.state.fiddle}
+          onClick={() => {
+            alert("unimplement!");
+          }}
       />);
-    if (this.props.embeddingParams.type !== EmbeddingType.Arc) {
-      toolbarButtons.push(
-        <Button
-          key="Run"
-          icon={<GoGear />}
-          label="Run"
-          title="Run Project: CtrlCmd + Enter"
-          isDisabled={this.toolbarButtonsAreDisabled()}
-          onClick={() => {
-            run();
-          }}
-        />,
-        <Button
-          key="BuildAndRun"
-          icon={<GoBeakerGear />}
-          label="Build &amp; Run"
-          title="Build &amp; Run Project: CtrlCmd + Alt + Enter"
-          isDisabled={this.toolbarButtonsAreDisabled()}
-          onClick={() => {
-            build().then(run);
-          }}
-        />
-      );
-    }
+    // if (this.props.embeddingParams.type !== EmbeddingType.Arc) {
+    //   toolbarButtons.push(
+    //     <Button
+    //       key="Run"
+    //       icon={<GoGear />}
+    //       label="Run"
+    //       title="Run Project: CtrlCmd + Enter"
+    //       isDisabled={this.toolbarButtonsAreDisabled()}
+    //       onClick={() => {
+    //         run();
+    //       }}
+    //     />,
+    //     <Button
+    //       key="BuildAndRun"
+    //       icon={<GoBeakerGear />}
+    //       label="Build &amp; Run"
+    //       title="Build &amp; Run Project: CtrlCmd + Alt + Enter"
+    //       isDisabled={this.toolbarButtonsAreDisabled()}
+    //       onClick={() => {
+    //         build().then(run);
+    //       }}
+    //     />
+    //   );
+    // }
     if (this.props.embeddingParams.type === EmbeddingType.Arc) {
       toolbarButtons.push(
         <Button
