@@ -147,8 +147,15 @@ export class ListItem extends React.Component<{
           <div className="error">{this.props.error}</div>
         </div>;
     }
+    if (this.props.icon === "") {
+      return <div className={className} onClick={this.props.onClick as any}>
+        <div className={"monaco-icon-label file-icon rust-lang-file-icon"} />
+        {content}
+      </div>;
+    }
+    console.log("========================");
     return <div className={className} onClick={this.props.onClick as any}>
-      <div className={"monaco-icon-label file-icon " + this.props.icon} />
+      <div className={"monaco-icon-label file-icon" + this.props.icon} />
       {content}
     </div>;
   }

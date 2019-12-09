@@ -182,7 +182,6 @@ export async function runTask(
   })();
   if (gulp.hasTask(name)) {
     try {
-      logLn(`Task ${name} is running...`, 1111);
       logLn(`Task ${name} is running...`, "info");
       await gulp.run(name);
       logLn(`Task ${name} is completed`, "info");

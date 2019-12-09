@@ -219,7 +219,7 @@ export class ViewTabs extends React.Component<ViewTabsProps, ViewTabsState> {
             key={x.key}
             label={name}
             value={v}
-            icon={getIconForFileType(x.type)}
+            icon={(x === undefined || x.type === undefined) ? getIconForFileType(x.type) : "rust-lang-file-icon"}
             isMarked={x.isDirty}
             isActive={v === view}
             isItalic={v === preview}
