@@ -28,6 +28,7 @@ import { TextInputBox, ImgShowBox } from "./Widgets";
 export class DeployDialog extends React.Component<{
     isOpen: boolean;
     fiddle: string;
+    compilerOpt: string;
     onCancel: () => void;
 }, {
 }> {
@@ -51,8 +52,8 @@ export class DeployDialog extends React.Component<{
                     Deploy Contract
                 </div>
                 <div style={{ flex: 1, padding: "8px" }}>
-                    <TextInputBox label="URL" value={`${urlPrefix}?id=${this.props.fiddle}&version=0.1`}/>
-                    <ImgShowBox label="QrCode" value={`${urlPrefix}?id=${this.props.fiddle}&version=0.1`}/>
+                    <TextInputBox label="URL" value={`${urlPrefix}?id=${this.props.fiddle}&version=${this.props.compilerOpt}`}/>
+                    <ImgShowBox label="QrCode" value={`${urlPrefix}?id=${this.props.fiddle}&version=${this.props.compilerOpt}`}/>
                 </div>
                 <div>
                     <Button

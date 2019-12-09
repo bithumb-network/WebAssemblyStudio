@@ -418,16 +418,21 @@ export class App extends React.Component<AppProps, AppState> {
     this.logLn("Project Zip CREATED ");
   }
   async newBuild() {
-    this.logLn("compile");
-    pushStatus("Building Project");
-    const options = { lto: true, opt_level: 's', debug: true, compilerOptime: this.state.compilerOption };
-    const project = appStore.getProject().getModel();
-    const libSrc = project.getFile("src/lib.rs");
-    const data = await Service.compileFileWithBindings(libSrc, Language.Rust, Language.Wasm, options);
+    try {
+      this.logLn("contract is compiling......", `info`);
+      pushStatus("Building Project");
+      const options = { lto: true, opt_level: 's', debug: true, compilerOptime: this.state.compilerOption };
+      const project = appStore.getProject().getModel();
+      const libSrc = project.getFile("src/lib.rs");
+      const data = await Service.compileFileWithBindings(libSrc, Language.Rust, Language.Wasm, options);
 
-    const outWasm = project.newFile("out/contract.wasm", FileType.Wasm, true);
-    outWasm.setData(data.wasm);
-    popStatus();
+      const outWasm = project.newFile("out/contract.wasm", FileType.Wasm, true);
+      outWasm.setData(data.wasm);
+      popStatus();
+      this.logLn("contract is compiled", `info`);
+    } catch (e) {
+      this.logLn("contract compile failed: ${e.message}", "error");
+    }
   }
   /**
    * Remember workspace split.
@@ -547,7 +552,9 @@ export class App extends React.Component<AppProps, AppState> {
         isDisabled={this.toolbarButtonsAreDisabled()}
         onClick={() => {
           this.newBuild();
-          this.fork();
+          if (this.state.fiddle === "" || this.state.fiddle === undefined) {
+            this.fork();
+          }
         }}
       />,
       <Button
@@ -760,6 +767,7 @@ export class App extends React.Component<AppProps, AppState> {
       <DeployDialog
           isOpen={true}
           fiddle={this.state.fiddle}
+          compilerOpt={this.state.compilerOption}
           onCancel={() => {
             this.setState({ deployDialog: false });
           }}
