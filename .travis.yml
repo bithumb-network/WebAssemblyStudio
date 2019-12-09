@@ -26,6 +26,6 @@ deploy:
   skip-cleanup: true
   github-token: $GITHUB_TOKEN
   email: travis@webassembly.studio
-  name: "WebAssemblyStudio bot"
+  name: "Bithumbchain Contract bot"
   on:
     branch: master

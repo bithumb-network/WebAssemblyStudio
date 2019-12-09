@@ -131,7 +131,7 @@ export interface RunnerInfo {
 
 let currentRunnerInfo: RunnerInfo = null;
 
-function clearCurrentRunnerInfoAndIframe() {
+export function clearCurrentRunnerInfoAndIframe() {
   currentRunnerInfo = null;
   const container = document.getElementById("task-runner-content");
   container.textContent = "";
@@ -180,6 +180,60 @@ export async function runTask(
       eval: externals === RunTaskExternals.Setup ? unsafeEval : undefined,
     }
   })();
+  if (gulp.hasTask(name)) {
+    try {
+      logLn(`Task ${name} is running...`, 1111);
+      logLn(`Task ${name} is running...`, "info");
+      await gulp.run(name);
+      logLn(`Task ${name} is completed`, "info");
+    } catch (e) {
+      logLn(`Task ${name} failed: ${e.message}`, "error");
+    }
+  } else if (!optional) {
+    logLn(`Task ${name} is not optional.` , "error");
+  }
+  clearCurrentRunnerInfoAndIframe();
+}
+
+export async function runTask2(
+    src: string,
+    name: string,
+    optional: boolean,
+    project: Project,
+    logLn: (...args: any[]) => void,
+    externals: RunTaskExternals
+) {
+  const currentRunnerGlobal = await createSandboxIFrame();
+  currentRunnerInfo = {
+    global: currentRunnerGlobal,
+    project,
+  };
+  // Runs the provided source in our fantasy gulp context
+  const gulp = new Gulpy();
+  contextify(src,
+      currentRunnerGlobal,
+      // thisArg
+      gulp,
+      {
+        // context for backwards compatibility
+        gulp,
+        Service,
+        project,
+        logLn,
+        fileTypeForExtension,
+        monaco: externals === RunTaskExternals.Setup ? monaco : undefined,
+      }, {
+        // modules
+        "gulp": gulp,
+        "@wasm/studio-utils": {
+          Service,
+          project,
+          logLn,
+          fileTypeForExtension,
+          Arc: externals === RunTaskExternals.Arc ? Arc : undefined,
+          eval: externals === RunTaskExternals.Setup ? unsafeEval : undefined,
+        }
+      })();
   if (gulp.hasTask(name)) {
     try {
       logLn(`Task ${name} is running...`, "info");

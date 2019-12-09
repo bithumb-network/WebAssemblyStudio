@@ -100,7 +100,7 @@ a {
 }
 
 .workspaceContainer:after {
-    content: "beta";
+    content: "test";
     position: fixed;
     width: 80px;
     height: 20px;
@@ -502,6 +502,12 @@ a {
 
 .help {
   float: right;
+}
+
+.version {
+  float: right;
+  width: 300px;
+  color: black;
 }
 
 .issue {

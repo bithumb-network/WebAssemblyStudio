@@ -30,7 +30,7 @@ import Group from "../utils/group";
 import { Errors } from "../errors";
 import getConfig from "../config";
 import { rewriteHTML, RewriteSourcesContext } from "../utils/rewriteSources";
-import { runTask as runGulpTask, RunTaskExternals } from "../utils/taskRunner";
+import { runTask as runGulpTask, runTask2 as runBuild, RunTaskExternals } from "../utils/taskRunner";
 
 export enum AppActionType {
   ADD_FILE_TO = "ADD_FILE_TO",
@@ -288,6 +288,33 @@ export async function runTask(
   const run = async (src: string) => {
     const project = appStore.getProject().getModel();
     await runGulpTask(src, name, optional, project, logLn, externals);
+  };
+  let gulpfile = appStore.getFileByName("gulpfile.js");
+  if (gulpfile) {
+    await run(appStore.getFileSource(gulpfile));
+  } else {
+    if (gulpfile = appStore.getFileByName("build.ts")) {
+      const output = await gulpfile.getModel().getEmitOutput();
+      await run(output.outputFiles[0].text);
+    } else {
+      if (gulpfile = appStore.getFileByName("build.js")) {
+        await run(appStore.getFileSource(gulpfile));
+      } else {
+        logLn(Errors.BuildFileMissing, "error");
+      }
+    }
+  }
+}
+
+export async function newRunTask(
+    name: string,
+    optional: boolean = false,
+    externals: RunTaskExternals = RunTaskExternals.Default
+) {
+  // Runs the provided source in our fantasy gulp context
+  const run = async (src: string) => {
+    const project = appStore.getProject().getModel();
+    await runBuild(src, name, optional, project, logLn, externals);
   };
   let gulpfile = appStore.getFileByName("gulpfile.js");
   if (gulpfile) {

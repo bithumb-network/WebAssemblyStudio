@@ -20,79 +20,74 @@
  */
 
 import * as React from "react";
-import * as ReactDOM from "react-dom";
-import * as ReactModal from "react-modal";
 
-import { Workspace } from "./Workspace";
-import { EditorView, ViewTabs, View, Tab, Tabs } from "./editor";
-import { Header } from "./Header";
-import { Toolbar } from "./Toolbar";
-import { ViewType, defaultViewTypeForFileType } from "./editor/View";
-import { build, run, runTask, openFiles, pushStatus, popStatus } from "../actions/AppActions";
-
-import appStore from "../stores/AppStore";
+import {Workspace} from "./Workspace";
+import {View, ViewTabs} from "./editor";
+import {Toolbar} from "./Toolbar";
+import {defaultViewTypeForFileType} from "./editor/View";
+import Select from "react-select";
 import {
   addFileTo,
-  loadProject,
-  initStore,
-  updateFileNameAndDescription,
-  deleteFile,
-  splitGroup,
-  openProjectFiles,
-  openFile,
-  openView,
-  closeView,
+  build,
   closeTabs,
-  saveProject,
+  closeView,
+  deleteFile,
   focusTabGroup,
-  setViewType,
+  initStore,
+  loadProject,
   logLn,
+  openFile,
+  openFiles,
+  openProjectFiles,
+  openView,
+  popStatus,
+  pushStatus,
+  run,
+  runTask,
+  saveProject,
+  setViewType,
+  splitGroup,
+  updateFileNameAndDescription
 } from "../actions/AppActions";
-import { Project, File, FileType, Directory, ModelRef } from "../models";
-import { Service, Language } from "../service";
-import { Split, SplitOrientation, SplitInfo } from "./Split";
 
-import { layout, assert, resetDOMSelection } from "../util";
+import appStore from "../stores/AppStore";
+import {Directory, File, FileType, ModelRef, Project} from "../models";
+import {Language, Service} from "../service";
+import {Split, SplitInfo, SplitOrientation} from "./Split";
+
+import {assert, layout, resetDOMSelection} from "../util";
 
 import * as Mousetrap from "mousetrap";
-import { Sandbox } from "./Sandbox";
-import { Gulpy } from "../gulpy";
 import {
-  GoDelete,
-  GoPencil,
-  GoGear,
-  GoVerified,
-  GoFileCode,
-  GoQuote,
-  GoFileBinary,
-  GoFile,
-  GoDesktopDownload,
-  GoBook,
-  GoRepoForked,
-  GoRocket,
   GoBeaker,
   GoBeakerGear,
-  GoThreeBars,
+  GoDesktopDownload,
+  GoGear,
   GoGist,
   GoOpenIssue,
+  GoPencil,
   GoQuestion,
+  GoRepoForked,
+  GoRocket,
+  GoThreeBars,
+  GoFile,
+  GoCloudUpload,
 } from "./shared/Icons";
-import { Button } from "./shared/Button";
+import {Button} from "./shared/Button";
 
-import { NewFileDialog } from "./NewFileDialog";
-import { EditFileDialog } from "./EditFileDialog";
-import { UploadFileDialog } from "./UploadFileDialog";
-import { ToastContainer } from "./Toasts";
-import { Spacer, Divider } from "./Widgets";
-import { ShareDialog } from "./ShareDialog";
-import { NewProjectDialog, Template } from "./NewProjectDialog";
-import { NewDirectoryDialog } from "./NewDirectoryDialog";
-import { Errors } from "../errors";
-import { ControlCenter } from "./ControlCenter";
+import {NewFileDialog} from "./NewFileDialog";
+import {EditFileDialog} from "./EditFileDialog";
+import {UploadFileDialog} from "./UploadFileDialog";
+import {ToastContainer} from "./Toasts";
+import {ShareDialog} from "./ShareDialog";
+import {DeployDialog} from "./DeployDialog";
+import {NewProjectDialog, Template} from "./NewProjectDialog";
+import {NewDirectoryDialog} from "./NewDirectoryDialog";
+import {ControlCenter} from "./ControlCenter";
 import Group from "../utils/group";
-import { StatusBar } from "./StatusBar";
-import { publishArc, notifyArcAboutFork } from "../actions/ArcActions";
-import { RunTaskExternals } from "../utils/taskRunner";
+import {StatusBar} from "./StatusBar";
+import {notifyArcAboutFork, publishArc} from "../actions/ArcActions";
+import {RunTaskExternals} from "../utils/taskRunner";
 
 export interface AppState {
   project: ModelRef<Project>;
@@ -114,6 +109,16 @@ export interface AppState {
    * If true, the share fiddle dialog is open.
    */
   shareDialog: boolean;
+
+  /**
+   * If true, the deploy fiddle dialog is open.
+   */
+  deployDialog: boolean;
+
+  /**
+   * If true, the deploy fiddle dialog is open.
+   */
+  compilerOption: string;
 
   /**
    * If true, the new project dialog is open.
@@ -176,6 +181,11 @@ export interface AppWindowContext {
   promptWhenClosing: boolean;
 }
 
+const compilerOptions = [
+  {value: "cargo 1.38.0-nightly (e853aa976 2019-08-09) && cdt v0.1.0 (002f3da6 2019-12-04)", label: "cargo 1.38.0-nightly (e853aa976 2019-08-09)&&cdt v0.1.0 (002f3da6 2019-12-04)"},
+  {value: "cargo xxx-nightly && cdt xxx", label: "cargo xxx-nightly && cdt xxx"}
+];
+
 export class App extends React.Component<AppProps, AppState> {
   fiddle: string;
   toastContainer: ToastContainer;
@@ -189,6 +199,7 @@ export class App extends React.Component<AppProps, AppState> {
       editFileDialogFile: null,
       newProjectDialog: !props.fiddle,
       shareDialog: false,
+      compilerOption: "",
       workspaceSplits: [
         {
           min: 200,
@@ -356,6 +367,15 @@ export class App extends React.Component<AppProps, AppState> {
     this.setState({ shareDialog: true });
   }
 
+  deploy() {
+    this.setState({ deployDialog: true });
+  }
+
+  // @ts-ignore
+  handleSelected = e => {
+    this.setState({compilerOption: e.value});
+  }
+
   async update() {
     saveProject(this.state.fiddle);
   }
@@ -396,6 +416,18 @@ export class App extends React.Component<AppProps, AppState> {
     const projectModel = this.state.project.getModel();
     await downloadService.downloadProject(projectModel, this.state.fiddle);
     this.logLn("Project Zip CREATED ");
+  }
+  async newBuild() {
+    this.logLn("compile");
+    pushStatus("Building Project");
+    const options = { lto: true, opt_level: 's', debug: true, compilerOptime: this.state.compilerOption };
+    const project = appStore.getProject().getModel();
+    const libSrc = project.getFile("src/lib.rs");
+    const data = await Service.compileFileWithBindings(libSrc, Language.Rust, Language.Wasm, options);
+
+    const outWasm = project.newFile("out/contract.wasm", FileType.Wasm, true);
+    outWasm.setData(data.wasm);
+    popStatus();
   }
   /**
    * Remember workspace split.
@@ -458,31 +490,33 @@ export class App extends React.Component<AppProps, AppState> {
     }
     if (this.props.embeddingParams.type === EmbeddingType.None ||
         this.props.embeddingParams.type === EmbeddingType.Arc) {
+      // toolbarButtons.push(
+      //   <Button
+      //     key="ForkProject"
+      //     icon={<GoRepoForked />}
+      //     label="Fork"
+      //     title="Fork Project"
+      //     isDisabled={this.toolbarButtonsAreDisabled()}
+      //     onClick={() => {
+      //       this.fork();
+      //     }}
+      //   />
+      // );
       toolbarButtons.push(
-        <Button
-          key="ForkProject"
-          icon={<GoRepoForked />}
-          label="Fork"
-          title="Fork Project"
-          isDisabled={this.toolbarButtonsAreDisabled()}
-          onClick={() => {
-            this.fork();
-          }}
-        />
+          <Button
+              key="Upload"
+              icon={<GoCloudUpload />}
+              label="Upload"
+              title="Upload Project"
+              isDisabled={this.toolbarButtonsAreDisabled()}
+              onClick={() => {
+                this.fork();
+              }}
+          />
       );
     }
     if (this.props.embeddingParams.type === EmbeddingType.None) {
       toolbarButtons.push(
-        <Button
-          key="CreateGist"
-          icon={<GoGist />}
-          label="Create Gist"
-          title="Create GitHub Gist from Project"
-          isDisabled={this.toolbarButtonsAreDisabled()}
-          onClick={() => {
-            this.gist();
-          }}
-        />,
         <Button
           key="Download"
           icon={<GoDesktopDownload />}
@@ -508,37 +542,48 @@ export class App extends React.Component<AppProps, AppState> {
       <Button
         key="Build"
         icon={<GoBeaker />}
-        label="Build"
-        title="Build Project: CtrlCmd + B"
+        label="Compile"
+        title="Compile Project: CtrlCmd + B"
         isDisabled={this.toolbarButtonsAreDisabled()}
         onClick={() => {
-          build();
+          this.newBuild();
+          this.fork();
         }}
+      />,
+      <Button
+          key="Deploy"
+          icon={<GoFile />}
+          label="Deploy"
+          title="Compile Deploy"
+          isDisabled={this.toolbarButtonsAreDisabled() || !this.state.fiddle}
+          onClick={() => {
+            this.deploy();
+          }}
       />);
-    if (this.props.embeddingParams.type !== EmbeddingType.Arc) {
-      toolbarButtons.push(
-        <Button
-          key="Run"
-          icon={<GoGear />}
-          label="Run"
-          title="Run Project: CtrlCmd + Enter"
-          isDisabled={this.toolbarButtonsAreDisabled()}
-          onClick={() => {
-            run();
-          }}
-        />,
-        <Button
-          key="BuildAndRun"
-          icon={<GoBeakerGear />}
-          label="Build &amp; Run"
-          title="Build &amp; Run Project: CtrlCmd + Alt + Enter"
-          isDisabled={this.toolbarButtonsAreDisabled()}
-          onClick={() => {
-            build().then(run);
-          }}
-        />
-      );
-    }
+    // if (this.props.embeddingParams.type !== EmbeddingType.Arc) {
+    //   toolbarButtons.push(
+    //     <Button
+    //       key="Run"
+    //       icon={<GoGear />}
+    //       label="Run"
+    //       title="Run Project: CtrlCmd + Enter"
+    //       isDisabled={this.toolbarButtonsAreDisabled()}
+    //       onClick={() => {
+    //         run();
+    //       }}
+    //     />,
+    //     <Button
+    //       key="BuildAndRun"
+    //       icon={<GoBeakerGear />}
+    //       label="Build &amp; Run"
+    //       title="Build &amp; Run Project: CtrlCmd + Alt + Enter"
+    //       isDisabled={this.toolbarButtonsAreDisabled()}
+    //       onClick={() => {
+    //         build().then(run);
+    //       }}
+    //     />
+    //   );
+    // }
     if (this.props.embeddingParams.type === EmbeddingType.Arc) {
       toolbarButtons.push(
         <Button
@@ -566,6 +611,7 @@ export class App extends React.Component<AppProps, AppState> {
       );
     }
     if (this.props.embeddingParams.type === EmbeddingType.None) {
+      // @ts-ignore
       toolbarButtons.push(
         <Button
           key="GithubIssues"
@@ -586,6 +632,15 @@ export class App extends React.Component<AppProps, AppState> {
           onClick={() => {
             this.loadHelp();
           }}
+        />,
+        <Select
+            defaultValue={compilerOptions[0]}
+            key="CompilerVersion"
+            label="Compiler Version"
+            title="Compiler Version"
+            className="version"
+            onChange={this.handleSelected}
+            options={compilerOptions}
         />
       );
     }
@@ -700,6 +755,15 @@ export class App extends React.Component<AppProps, AppState> {
             this.setState({ shareDialog: false });
           }}
         />
+      }
+      {this.state.deployDialog &&
+      <DeployDialog
+          isOpen={true}
+          fiddle={this.state.fiddle}
+          onCancel={() => {
+            this.setState({ deployDialog: false });
+          }}
+      />
       }
       {this.state.uploadFileDialogDirectory &&
         <UploadFileDialog
