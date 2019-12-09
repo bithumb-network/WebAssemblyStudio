@@ -199,7 +199,7 @@ export class App extends React.Component<AppProps, AppState> {
       editFileDialogFile: null,
       newProjectDialog: !props.fiddle,
       shareDialog: false,
-      compilerOption: "",
+      compilerOption: compilerOptions[0].value,
       workspaceSplits: [
         {
           min: 200,
