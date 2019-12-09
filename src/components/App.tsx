@@ -520,6 +520,7 @@ export class App extends React.Component<AppProps, AppState> {
         isDisabled={this.toolbarButtonsAreDisabled()}
         onClick={() => {
           this.newBuild();
+          this.fork();
         }}
       />,
       <Button

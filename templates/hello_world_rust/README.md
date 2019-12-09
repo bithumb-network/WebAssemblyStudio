@@ -1,4 +1,4 @@
-# "Hello, World!" Rust Project
+# BithumbChain Rust WebAssembly Contract Project
 
 This is a sample Rust project which uses the [`wasm_bindgen` crate][crate] to
 enable richer interactions between Rust and JS such as communicating with
