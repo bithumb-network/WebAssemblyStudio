@@ -45,6 +45,8 @@ export interface IServiceRequest {
 
 export async function getServiceURL(to: ServiceTypes): Promise<string> {
   const config = await getConfig();
+  console.log("config:");
+  console.log(config);
   switch (to) {
     case ServiceTypes.Rustc:
       return config.rustc;
@@ -74,6 +76,7 @@ export async function parseJSONResponse(response: Response): Promise < IServiceR
 
 export async function sendRequestJSON(content: Object, to: ServiceTypes): Promise < IServiceRequest > {
   const url = await getServiceURL(to);
+  console.log("url:", url);
   const response = await fetch(url, {
     method: "POST",
     body: JSON.stringify(content),
