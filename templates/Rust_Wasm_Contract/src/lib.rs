@@ -1,18 +1,35 @@
-// Current prelude for using `wasm_bindgen`, and this'll get smaller over time!
-#![feature(proc_macro, wasm_custom_section, wasm_import_module)]
-extern crate wasm_bindgen;
-use wasm_bindgen::prelude::*;
+#![no_std]
+#![allow(non_snake_case)]
+#![feature(proc_macro_hygiene)]
 
-// Here we're importing the `alert` function from the browser, using
-// `#[wasm_bindgen]` to generate correct wrappers.
-#[wasm_bindgen]
-extern {
-    fn alert(s: &str);
+extern crate bithumb_chain_std;
+
+use bithumb_chain_std::lib::*;
+
+#[macro_use]
+use bithumb_chain_abi_derive::bithumb_chain_abi;
+use crate::bithumb_chain_std::abi::EndpointInterface;
+use bithumb_chain_std::api::{ret, input};
+use bithumb_chain_std::logger::debug;
+
+#[bithumb_chain_abi(HelloEndpoint)]
+pub trait HelloInterface {
+    fn hello(&mut self, name: String) -> bool;
 }
 
-// Here we're exporting a function called `greet` which will display a greeting
-// for `name` through a dialog.
-#[wasm_bindgen]
-pub fn greet(name: &str) {
-    alert(&format!("Hello, {}!", name));
+pub struct HelloContract;
+
+impl HelloInterface for HelloContract {
+    fn hello(&mut self, name: String) -> bool {
+        let mut str1 = "hello,".to_string();
+        str1.push_str(&name);
+        debug(&str1);
+        true
+    }
+}
+
+#[no_mangle]
+pub fn invoke() {
+    let mut endpoint = HelloEndpoint::new(HelloContract {});
+    ret(&endpoint.dispatch(&input()));
 }

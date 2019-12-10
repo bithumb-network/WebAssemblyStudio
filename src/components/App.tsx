@@ -87,7 +87,7 @@ import {ControlCenter} from "./ControlCenter";
 import Group from "../utils/group";
 import {StatusBar} from "./StatusBar";
 import {notifyArcAboutFork, publishArc} from "../actions/ArcActions";
-import {RunTaskExternals} from "../utils/taskRunner";
+import {clearCurrentRunnerInfoAndIframe, RunTaskExternals} from "../utils/taskRunner";
 
 export interface AppState {
   project: ModelRef<Project>;
@@ -431,8 +431,10 @@ export class App extends React.Component<AppProps, AppState> {
       popStatus();
       this.logLn("contract is compiled", `info`);
     } catch (e) {
-      this.logLn("contract compile failed: ${e.message}", "error");
+      popStatus();
+      this.logLn(`Contract compile failed: ${e.message}`, "error");
     }
+    clearCurrentRunnerInfoAndIframe();
   }
   /**
    * Remember workspace split.
