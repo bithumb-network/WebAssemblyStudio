@@ -60,18 +60,15 @@ import {assert, layout, resetDOMSelection} from "../util";
 import * as Mousetrap from "mousetrap";
 import {
   GoBeaker,
-  GoBeakerGear,
+  GoCloudUpload,
   GoDesktopDownload,
+  GoFile,
   GoGear,
-  GoGist,
   GoOpenIssue,
   GoPencil,
   GoQuestion,
-  GoRepoForked,
   GoRocket,
   GoThreeBars,
-  GoFile,
-  GoCloudUpload,
 } from "./shared/Icons";
 import {Button} from "./shared/Button";
 
@@ -428,6 +425,8 @@ export class App extends React.Component<AppProps, AppState> {
 
       const outWasm = project.newFile("out/contract.wasm", FileType.Wasm, true);
       outWasm.setData(data.wasm);
+      const outAbi = project.newFile("out/abi.json", FileType.JavaScript, true);
+      outAbi.setData(data.wasmBindgenJs);
       popStatus();
       this.logLn("contract is compiled", `info`);
     } catch (e) {
