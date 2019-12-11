@@ -329,7 +329,9 @@ export class Service {
   }
 
   static async loadJSON(uri: string): Promise<ILoadFiddleResponse> {
-    const url = "https://webassembly-studio-fiddles.herokuapp.com/fiddle/" + uri;
+    // const url = "https://webassembly-studio-fiddles.herokuapp.com/fiddle/" + uri;
+    const url = "http://127.0.0.1:8080/compile/project/" + uri;
+    console.log("url", url);
     const response = await fetch(url, {
       headers: new Headers({ "Content-type": "application/json; charset=utf-8" })
     });
@@ -341,7 +343,8 @@ export class Service {
     if (update) {
       throw new Error("NYI");
     } else {
-      const response = await fetch("https://webassembly-studio-fiddles.herokuapp.com/set-fiddle", {
+      // const response = await fetch("https://webassembly-studio-fiddles.herokuapp.com/set-fiddle", {
+      const response = await fetch("http://127.0.0.1:8080/compile/upload", {
         method: "POST",
         headers: new Headers({ "Content-type": "application/json; charset=utf-8" }),
         body: JSON.stringify(json)

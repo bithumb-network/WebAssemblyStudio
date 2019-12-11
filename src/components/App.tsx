@@ -550,7 +550,8 @@ export class App extends React.Component<AppProps, AppState> {
         key="Build"
         icon={<GoBeaker />}
         label="Compile"
-        title="Compile Project: CtrlCmd + B"
+        // title="Compile Project: CtrlCmd + B"
+        title="Compile Project"
         isDisabled={this.toolbarButtonsAreDisabled()}
         onClick={() => {
           this.newBuild();
