@@ -1,7 +1,7 @@
 {
   "serviceUrl": "//wasmexplorer-service.herokuapp.com/service.php",
   "clang": "//webassembly-studio-clang.herokuapp.com/build",
-  "rustc": "http://127.0.0.1:8080/compile/rustc",
+  "rustc": "http://127.0.0.1:8080/api/v1/compile/rustc",
   "cargo": "//webassembly-studio-rust.herokuapp.com/cargo",
   "templates": {
     "default": "/dist/templates/index.js",
